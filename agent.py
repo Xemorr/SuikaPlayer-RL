@@ -5,8 +5,7 @@ from collections import deque
 import numpy as np
 import torch
 import torch.nn as nn
-import torch.optim as optim
-from tqdm import tqdm
+from tqdm import trange
 
 import main
 from c_adamw import CAdamW
@@ -122,34 +121,35 @@ if __name__ == '__main__':
     previous_game = -1
     gym = main.Gym()
     step = 0
-    for i in tqdm(range(600)):
-        step += 1
-        # Update target network every fixed interval
-        if step % update_interval == 0:
-            agent.update_target_network()
+    while True:
+        for i in trange(600):
+            step += 1
+            # Update target network every fixed interval
+            if step % update_interval == 0:
+                agent.update_target_network()
 
-        state = gym.take_screenshot()
-        action = agent.select_action(state)
+            state = gym.take_screenshot()
+            action = agent.select_action(state)
 
-        xCoord = 45 * (action - 4)
-        gym.click_on_canvas(xCoord, 20)
-        time.sleep(0.6)
+            xCoord = 45 * (action - 4)
+            gym.click_on_canvas(xCoord, 20)
+            time.sleep(0.6)
 
-        next_state = gym.take_screenshot()
-        done = gym.game_over()  # Implement a check to determine if the game is over
+            next_state = gym.take_screenshot()
+            done = gym.game_over()  # Implement a check to determine if the game is over
 
-        new_score = gym.extract_score()
-        if new_score == previous_game:
-            new_score = 0
-        reward = -300 if done else max(new_score - previous_score, -300)
-        reward_history.append(reward)
-        if random.randint(1, 10) == 5:
-            print(agent.epsilon)
-            print(sum(reward_history) / len(reward_history))
-        previous_score = new_score
-        agent.store_transition(state, action, reward, next_state, done)
-        agent.train()
-        if done:
-            previous_game = new_score
-            gym.click_next()
-    torch.save(agent.net.state_dict(), "agent.pth")
+            new_score = gym.extract_score()
+            if new_score == previous_game:
+                new_score = 0
+            reward = -300 if done else max(new_score - previous_score, -300)
+            reward_history.append(reward)
+            if random.randint(1, 10) == 5:
+                print(agent.epsilon)
+                print(sum(reward_history) / len(reward_history))
+            previous_score = new_score
+            agent.store_transition(state, action, reward, next_state, done)
+            agent.train()
+            if done:
+                previous_game = new_score
+                gym.click_next()
+        torch.save(agent.net.state_dict(), "agent.pth")
