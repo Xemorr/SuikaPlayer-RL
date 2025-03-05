@@ -141,7 +141,7 @@ if __name__ == '__main__':
             new_score = gym.extract_score()
             if new_score == previous_game:
                 new_score = 0
-            reward = -300 if done else max(new_score - previous_score, -300)
+            reward = -500 if done else max(new_score - previous_score, -500)
             reward_history.append(reward)
             if random.randint(1, 10) == 5:
                 print(agent.epsilon)
